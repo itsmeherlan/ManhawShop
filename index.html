@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ManhwaShop — Responsive E-commerce (HTML/CSS/JS)</title>
+  <style>
+    :root{
+      --accent:#0ea5a4; --bg:#f6f7fb; --card:#ffffff; --muted:#6b7280; --shadow: 0 6px 20px rgba(15,23,42,0.08);
+      --max-width:1200px;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; margin:0; background:var(--bg); color:#0f172a}
+    .container{max-width:var(--max-width); margin:24px auto; padding:0 16px}
+
+    /* Header */
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;font-weight:700}
+    .search{flex:1; max-width:560px; display:flex;background:white;border-radius:12px;padding:8px 10px;align-items:center;box-shadow:var(--shadow)}
+    .search input{border:none;outline:none;flex:1;font-size:14px}
+    .actions{display:flex;gap:12px;align-items:center}
+    .btn{background:var(--card);padding:8px 10px;border-radius:10px;box-shadow:var(--shadow);cursor:pointer;border:none}
+    .cart-count{background:var(--accent);color:#fff;padding:3px 7px;border-radius:999px;font-size:12px;margin-left:6px}
+
+    /* Layout */
+    .grid{display:grid;grid-template-columns:260px 1fr;gap:20px;margin-top:20px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    /* Sidebar */
+    .sidebar{background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+    .filter-group{margin-bottom:14px}
+    .filter-group h4{margin:0 0 8px 0;font-size:13px;color:var(--muted)}
+    .category{display:flex;gap:8px;flex-direction:column}
+    .category button{background:transparent;border:1px solid #e6eef0;padding:8px;border-radius:8px;cursor:pointer}
+
+    /* Product list */
+    .products{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    @media (max-width:1100px){.products{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:600px){.products{grid-template-columns:1fr}}
+    .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+    .card img.media {
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+}
+
+    .card h3{margin:0;font-size:15px}
+    .price{font-weight:700;margin-top:auto}
+    .card footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+
+    /* Product modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:80}
+    .modal.open{display:flex}
+    .modal-card{width:min(920px,96%);background:var(--card);padding:18px;border-radius:12px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:900px){.modal-card{grid-template-columns:1fr}}
+    .thumb {
+      height: 320px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: 10px;
+      background-color: white;
+    }
+    .modal-card img.thumb-img {
+      width: 100%;
+      height: 320px;
+      object-fit: contain;
+      border-radius: 10px;
+      background-color: white;
+    }
+    .detail h2{margin:0 0 8px 0}
+    .qty{display:flex;gap:8px;align-items:center;margin-top:10px}
+    .qty button{padding:6px 10px;border-radius:8px;border:1px solid #e6eef0;background:white;cursor:pointer}
+
+    /* Cart drawer */
+    .cart-drawer{position:fixed;right:20px;top:80px;width:360px;max-height:70vh;background:var(--card);border-radius:12px;padding:10px;box-shadow:var(--shadow);overflow:auto;z-index:90}
+    @media (max-width:480px){.cart-drawer{right:8px;width:92%}}
+    .cart-item{display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px dashed #eef3f5}
+    .cart-item img{width:64px;height:64px;object-fit:cover;border-radius:8px}
+    .cart-total{display:flex;justify-content:space-between;padding:12px 6px;font-weight:700}
+
+    /* Footer */
+    footer{margin-top:28px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* Tiny helpers */
+    .muted{color:var(--muted)}
+    a.link{color:var(--accent);text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">ManhwaShop</div>
+        <div class="muted"></div>
+      </div>
+
+      <div class="search">
+        <input id="searchInput" placeholder="Search products, e.g. shoes, jacket..." />
+        <button class="btn" id="searchBtn">Search</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="viewCartBtn">Cart <span id="cartCount" class="cart-count">0</span></button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <aside class="sidebar">
+        <div class="filter-group">
+          <h4>Categories</h4>
+          <div class="category">
+            <button data-cat="all">All</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <h4>Sort</h4>
+          <div class="category">
+            <button data-sort="default">Default</button>
+            <button data-sort="price-asc">Price: Low → High</button>
+            <button data-sort="price-desc">Price: High → Low</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <h4>About</h4>
+          <p class="muted">Discover and shop your favorite manhwa volumes with ease and style.</p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="productGrid" class="products"></div>
+      </section>
+    </main>
+
+    <footer style="margin-top: 40px; padding: 20px 0; text-align: center; background: #0ea5a4; color: #eee; font-size: 14px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <p>© 2025 ManhwaShop. All rights reserved.</p>
+  <p>
+    Follow us on
+    <a href="#" style="color: #eff1f1; text-decoration: none; margin: 0 8px;">Twitter</a>|
+    <a href="#" style="color: #f5f5f5; text-decoration: none; margin: 0 8px;">Facebook</a>|
+    <a href="#" style="color: #fcfcfc; text-decoration: none; margin: 0 8px;">Instagram</a>
+  </p>
+  <p style="margin-top: 12px; font-size: 12px; color: #ffffff;">
+    Powered by passion for manhwa and great stories.
+  </p>
+</footer>
+
+  </div>
+
+  <!-- Product modal -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div>
+        <img id="modalImg" class="thumb-img" alt="Product Image" />
+      </div>
+      <div class="detail">
+        <h2 id="modalTitle"></h2>
+        <div id="modalPrice" style="font-weight:700;margin-bottom:8px"></div>
+        <div id="modalDesc" class="muted"></div>
+        <div class="qty">
+          <label>Qty</label>
+          <button id="qtyMinus">-</button>
+          <div id="qtyVal">1</div>
+          <button id="qtyPlus">+</button>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button class="btn" id="addToCartBtn">Add to cart</button>
+          <button class="btn" id="closeModalBtn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Drawer (hidden by default) -->
+  <div id="cartDrawer" class="cart-drawer" style="display:none">
+    <h3>Your cart</h3>
+    <div id="cartItems"></div>
+    <div class="cart-total"><div>Total</div><div id="cartTotal">₱0.00</div></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn" id="clearCartBtn">Clear</button>
+      <button class="btn" id="checkoutBtn">Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    // Sample products with image URLs
+    const PRODUCTS = [
+      {
+        id:1,
+        title:'Solo Leveling Vol. 1',
+        price:650.00,
+        category:'manhwa',
+        desc:'The first volume of the hit manhwa series Solo Leveling.',
+        img:'images/lvl.jpg'
+      },
+      {
+        id:2,
+        title:'Tower of God Vol. 1',
+        price:720.00,
+        category:'manhwa',
+        desc:'Start the epic adventure with Tower of God Volume 1.',
+        img:'images/tower.jpg'
+      },
+      {
+        id:3,
+        title:'Omniscient Reader’s Viewpoint Vol. 1',
+        price:680.00,
+        category:'manhwa',
+        desc:'The novel-turned-manhwa ORV’s first print volume.',
+        img:'images/Omni.jpg'
+      },
+      {
+        id:4,
+        title:'The Beginning After the End Vol. 1',
+        price:700.00,
+        category:'manhwa',
+        desc:'TBATE’s first printed volume full-color edition.',
+        img:'images/haha.jpg'
+      },
+      {
+        id:5,
+        title:'Eleceed Vol. 1',
+        price:690.00,
+        category:'manhwa',
+        desc:'The energetic and comedic action manhwa Eleceed, Volume 1.',
+        img:'images/ele.jpg'
+      },
+      {
+        id:6,
+        title:'Wind Breaker Vol. 1',
+        price:650.00,
+        category:'manhwa',
+        desc:'The street-racing manhwa Wind Breaker — Volume 1.',
+        img:'images/wind.jpg'
+      }
+    ];
+
+    // --- Utilities ---
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const formatCurrency = v => '₱' + Number(v).toLocaleString('en-PH', {minimumFractionDigits:2});
+
+    // --- State & Storage ---
+    let cart = JSON.parse(localStorage.getItem('minishop_cart')||'[]');
+    let currentFilter = {category:'all',search:'',sort:'default'};
+
+    // --- DOM refs ---
+    const productGrid = $('#productGrid');
+    const cartCount = $('#cartCount');
+    const cartDrawer = $('#cartDrawer');
+    const cartItemsEl = $('#cartItems');
+    const cartTotalEl = $('#cartTotal');
+    const modal = $('#modal');
+    const modalImg = $('#modalImg');
+    const modalTitle = $('#modalTitle');
+    const modalPrice = $('#modalPrice');
+    const modalDesc = $('#modalDesc');
+    const qtyVal = $('#qtyVal');
+    let modalQty = 1;
+    let activeProduct = null;
+
+    // --- Render products ---
+    function renderProducts(){
+      let list = PRODUCTS.slice();
+      // filter
+      if(currentFilter.category !== 'all') list = list.filter(p=>p.category===currentFilter.category);
+      if(currentFilter.search) list = list.filter(p=>p.title.toLowerCase().includes(currentFilter.search.toLowerCase())||p.desc.toLowerCase().includes(currentFilter.search.toLowerCase()));
+      // sort
+      if(currentFilter.sort==='price-asc') list.sort((a,b)=>a.price-b.price);
+      if(currentFilter.sort==='price-desc') list.sort((a,b)=>b.price-a.price);
+
+      productGrid.innerHTML = '';
+      for(const p of list){
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <img class="media" src="${p.img}" alt="${p.title}" />
+          <h3>${p.title}</h3>
+          <div class="muted">${p.category}</div>
+          <div class="price">${formatCurrency(p.price)}</div>
+          <footer>
+            <div style="font-size:13px;color:var(--muted)">Quick view</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" data-id="${p.id}" onclick="openModal(${p.id})">View</button>
+              <button class="btn" onclick="addToCart(${p.id},1)">Add</button>
+            </div>
+          </footer>
+        `;
+        productGrid.appendChild(card);
+      }
+    }
+
+    // --- Modal ---
+    window.openModal = function(id){
+      activeProduct = PRODUCTS.find(x=>x.id===id);
+      if(!activeProduct) return;
+      modalImg.src = activeProduct.img;
+      modalImg.alt = activeProduct.title;
+      modalTitle.textContent = activeProduct.title;
+      modalPrice.textContent = formatCurrency(activeProduct.price);
+      modalDesc.textContent = activeProduct.desc;
+      modalQty = 1; qtyVal.textContent = modalQty;
+      modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+    }
+    $('#closeModalBtn').addEventListener('click',()=>{ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); });
+    $('#qtyPlus').addEventListener('click',()=>{ modalQty++; qtyVal.textContent = modalQty; });
+    $('#qtyMinus').addEventListener('click',()=>{ if(modalQty>1) modalQty--; qtyVal.textContent = modalQty; });
+    $('#addToCartBtn').addEventListener('click',()=>{ if(activeProduct) addToCart(activeProduct.id, modalQty); modal.classList.remove('open'); });
+
+    // --- Cart functions ---
+    function saveCart(){ localStorage.setItem('minishop_cart', JSON.stringify(cart)); renderCart(); }
+    function addToCart(id,qty=1){
+      const existing = cart.find(i=>i.id===id);
+      if(existing) existing.qty += qty; else cart.push({id,qty});
+      saveCart(); flashCart();
+    }
+    function removeFromCart(id){ cart = cart.filter(i=>i.id!==id); saveCart(); }
+    function updateCartQty(id,qty){ const it = cart.find(i=>i.id===id); if(!it) return; it.qty = qty; if(it.qty<=0) removeFromCart(id); saveCart(); }
+    function clearCart(){ cart = []; saveCart(); }
+
+    function renderCart(){
+      cartCount.textContent = cart.reduce((s,i)=>s+i.qty,0);
+      cartItemsEl.innerHTML = '';
+      let total = 0;
+      for(const item of cart){
+        const p = PRODUCTS.find(x=>x.id===item.id);
+        if(!p) continue;
+        total += p.price * item.qty;
+        const row = document.createElement('div'); row.className='cart-item';
+        row.innerHTML = `
+          <img src="${p.img}" alt="${p.title}" />
+          <div style="flex:1">
+            <div style="font-weight:700">${p.title}</div>
+            <div class="muted">${formatCurrency(p.price)} x ${item.qty}</div>
+            <div style="margin-top:6px;display:flex;gap:6px">
+              <button class="btn" onclick="updateCartQty(${p.id},${item.qty-1})">-</button>
+              <button class="btn" onclick="updateCartQty(${p.id},${item.qty+1})">+</button>
+              <button class="btn" onclick="removeFromCart(${p.id})">Remove</button>
+            </div>
+          </div>
+        `;
+        cartItemsEl.appendChild(row);
+      }
+      cartTotalEl.textContent = formatCurrency(total);
+    }
+
+    // --- Small helpers ---
+    function flashCart(){ cartDrawer.style.display='block'; setTimeout(()=>cartDrawer.style.display='none',1600); }
+
+    // --- Events ---
+    $('#viewCartBtn').addEventListener('click',()=>{ cartDrawer.style.display = cartDrawer.style.display==='block'?'none':'block'; renderCart(); });
+    $('#clearCartBtn').addEventListener('click',()=>{ if(confirm('Clear cart?')){ clearCart(); } });
+    $('#checkoutBtn').addEventListener('click',()=>{ if(cart.length===0){ alert('Cart is empty'); return; } alert('Checkout simulated. In a real site you would integrate a payment gateway.'); clearCart(); });
+    $('#searchBtn').addEventListener('click',()=>{ currentFilter.search = $('#searchInput').value.trim(); renderProducts(); });
+    $('#searchInput').addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ currentFilter.search = e.target.value.trim(); renderProducts(); } });
+
+    $$('.category button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const cat = btn.dataset.cat; const sort = btn.dataset.sort;
+        if(cat!==undefined){ currentFilter.category = cat; }
+        if(sort!==undefined){ currentFilter.sort = sort; }
+        // handle sort buttons: data-sort attribute, category buttons have data-cat
+        renderProducts();
+      });
+    });
+
+    // Initial render
+    renderProducts();
+    renderCart();
+  </script>
+</body>
+</html>
